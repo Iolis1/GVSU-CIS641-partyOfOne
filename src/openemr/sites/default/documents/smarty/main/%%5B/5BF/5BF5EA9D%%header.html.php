@@ -1,4 +1,4 @@
-<?php /* Smarty version 2.6.33, created on 2024-10-17 20:47:02
+<?php /* Smarty version 2.6.33, created on 2024-11-07 23:28:28
          compiled from default/views/header.html */ ?>
 <?php require_once(SMARTY_CORE_DIR . 'core.load_plugins.php');
 smarty_core_load_plugins(array('plugins' => array(array('function', 'headerTemplate', 'default/views/header.html', 4, false),)), $this); ?>

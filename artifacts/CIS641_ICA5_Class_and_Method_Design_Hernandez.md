@@ -52,4 +52,3 @@
 #### Handling Constraint Violations:
 - **Input Validation:** Throws an `IllegalArgumentException` if `testResultsSummary` is invalid.
 - **Output Validation:** Ensures that the `simplifiedSummary` meets simplicity and length requirements; throws a `RuntimeException` if not.
-.

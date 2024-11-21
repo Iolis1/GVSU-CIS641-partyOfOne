@@ -45,30 +45,34 @@ $coljson = "";
 $orderjson = "";
 $res = sqlStatement("SELECT option_id, title, toggle_setting_1 FROM list_options WHERE list_id = 'ptlistcols' AND activity = 1 ORDER BY seq, title");
 $sort_dir_map = generate_list_map('Sort_Direction');
-while ($row = sqlFetchArray($res)) {
-    $colname = $row['option_id'];
-    $colorder = $sort_dir_map[$row['toggle_setting_1']]; // Get the title 'asc' or 'desc' using the value
-    $title = xl_list_label($row['title']);
-    $title1 = ($title == xl('Full Name')) ? xl('Name') : $title;
-    $header .= "   <th>";
-    $header .= text($title);
-    $header .= "</th>\n";
-    $header0 .= "   <td ><input type='text' size='20' ";
-    $header0 .= "value='' class='form-control search_init' placeholder='" . xla("Search by") . " " . $title1 . "'/></td>\n";
-    if ($coljson) {
-        $coljson .= ", ";
-    }
+if ($res) {
+    while ($row = sqlFetchArray($res)) {
+        $colname = $row['option_id'] ?? ''; // Default to empty string if null
+        $colorder = $sort_dir_map[$row['toggle_setting_1']] ?? 'asc'; // Default to 'asc' if null
+        $title = xl_list_label($row['title'] ?? ''); // Handle missing 'title'
+        $title1 = ($title == xl('Full Name')) ? xl('Name') : $title;
 
-    $coljson .= "{\"sName\": \"" . addcslashes($colname, "\t\r\n\"\\") . "\"";
-    if ($title1 == xl('Name')) {
-        $coljson .= ", \"mRender\": wrapInLink";
+        $header .= "   <th>" . text($title) . "</th>\n";
+        $header0 .= "   <td ><input type='text' size='20' value='' class='form-control search_init' placeholder='" . xla("Search by") . " " . $title1 . "'/></td>\n";
+
+        if ($coljson) {
+            $coljson .= ", ";
+        }
+
+        $coljson .= "{\"sName\": \"" . addcslashes($colname ?? '', "\t\r\n\"\\") . "\"";
+        if ($title1 == xl('Name')) {
+            $coljson .= ", \"mRender\": wrapInLink";
+        }
+        $coljson .= "}";
+
+        if ($orderjson) {
+            $orderjson .= ", ";
+        }
+        $orderjson .= "[\"$colcount\", \"" . addcslashes($colorder ?? 'asc', "\t\r\n\"\\") . "\"]";
+        ++$colcount;
     }
-    $coljson .= "}";
-    if ($orderjson) {
-        $orderjson .= ", ";
-    }
-    $orderjson .= "[\"$colcount\", \"" . addcslashes($colorder, "\t\r\n\"\\") . "\"]";
-    ++$colcount;
+} else {
+    error_log("No results returned for patient_finder query");
 }
 $loading = "";
 ?>

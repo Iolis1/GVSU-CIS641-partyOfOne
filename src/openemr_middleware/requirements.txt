@@ -1,0 +1,7 @@
+flask
+pymysql
+transformers
+torch
+openai
+sacremoses
+protobuf

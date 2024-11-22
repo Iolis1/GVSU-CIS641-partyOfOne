@@ -1,2 +1,5 @@
 # Ignore configuration files
 config.json
+
+# Ignore generated files
+generate_index.py

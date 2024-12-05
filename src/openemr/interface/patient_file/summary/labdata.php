@@ -251,6 +251,17 @@ function checkAll(bx) {
                         $i = 0;
                         $item_graph = 0;
                         $rowspan = count($value_select);
+                        echo "Generated URL: $rootdir/modules/custom_modules/summary_processor.php?procedure_ids[]=" . implode('&procedure_ids[]=', $value_select);
+
+                        if ($value_select) {
+                            echo "<div class='mb-3'>";
+                            echo "<a href='$rootdir/modules/custom_modules/summary_processor.php?procedure_ids[]=" . implode('&procedure_ids[]=', $value_select) . "' class='btn btn-primary'>";
+                            echo xlt('Summarize Selected');
+                            echo "</a>";
+                            echo "</div>";
+                        } else {
+                            echo "<p>" . xlt('No lab results selected for summarization.') . "</p>";
+                        }
                         echo "<div class='table-responsive'><table class='border table'>";
                         echo "<tr>";
                         #echo "<th class='list'>Item</td>";
@@ -415,7 +426,15 @@ function checkAll(bx) {
 
                         $cellcount = count($datelist);
                         $itemcount = count($value_matrix);
-
+                        if ($value_select) {
+                            echo "<div class='mb-3'>";
+                            echo "<a href='$rootdir/modules/custom_modules/summary_processor.php?procedure_ids[]=" . implode('&procedure_ids[]=', $value_select) . "' class='btn btn-primary'>";
+                            echo xlt('Summarize Selected');
+                            echo "</a>";
+                            echo "</div>";
+                        } else {
+                            echo "<p>" . xlt('No lab results selected for summarization.') . "</p>";
+                        }
                         // print matrix
                         echo "<div class='table-responsive'><table class='border table' cellpadding='2'>";
                         echo "<tr>";

@@ -5,3 +5,4 @@ torch
 openai
 sacremoses
 protobuf
+cryptography

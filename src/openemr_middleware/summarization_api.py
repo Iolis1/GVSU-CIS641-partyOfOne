@@ -1,10 +1,8 @@
 from flask import Flask, request, jsonify
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import BioGptTokenizer, BioGptForCausalLM
 import openai
 import pymysql
 import json
-import zlib  # For compression/decompression
-import base64
 
 # Load configuration from config.json
 with open("config.json") as config_file:
@@ -13,8 +11,8 @@ with open("config.json") as config_file:
 app = Flask(__name__)
 
 # BioGPT setup
-bio_tokenizer = AutoTokenizer.from_pretrained("microsoft/BioGPT")
-bio_model = AutoModelForCausalLM.from_pretrained("microsoft/BioGPT")
+bio_tokenizer = BioGptTokenizer.from_pretrained("microsoft/BioGPT")
+bio_model = BioGptForCausalLM.from_pretrained("microsoft/BioGPT")
 
 # Set OpenAI API key
 openai.api_key = config["openai_api_key"]
@@ -65,18 +63,7 @@ def summarize_data():
         patient_id = data["patient_id"]
         data_type = data["data_type"]
         data_id = data["data_id"]
-
-         # Decode and decompress data_content
-        try:
-            compressed_data = base64.b64decode(data["data_content"])
-            data_content = zlib.decompress(compressed_data).decode()
-            print("Successfully decompressed data_content")
-        except (zlib.error, base64.binascii.Error) as e:
-            print(f"Decompression or Decoding Error: {e}")
-            data_content = data["data_content"]  # Fall back to plain text
-            print("Falling back to plain text data_content")
-
-        print(f"Data Content Length: {len(data_content)}")
+        data_content = data["data_content"]
     except KeyError as e:
         print(f"Missing Key: {e}")
         return {"error": f"Missing key {str(e)}"}, 400
@@ -89,10 +76,18 @@ def summarize_data():
 
     # Generate BioGPT summary
     try:
-        bio_inputs = bio_tokenizer(data_content, return_tensors="pt")
-        bio_max_tokens = min(150, len(data_content) // 4)  # Dynamic token adjustment
-        bio_outputs = bio_model.generate(**bio_inputs, max_new_tokens=bio_max_tokens)
-        bio_summary = bio_tokenizer.decode(bio_outputs[0], skip_special_tokens=True)
+        bio_prompt = (
+            "Summarize the following medical test results in one clear paragraph:\n\n"
+            f"{data_content}"
+        )
+        bio_inputs = bio_tokenizer(bio_prompt, return_tensors="pt")
+        bio_max_tokens = min(200, len(bio_prompt) // 4)  # Dynamic token adjustment
+        bio_outputs = bio_model.generate(**bio_inputs, 
+                                         max_new_tokens=bio_max_tokens,
+                                         no_repeat_ngram_size=3,
+                                         temperature=0.7,
+                                         top_k=50)
+        bio_summary = bio_tokenizer.decode(bio_outputs[0], skip_special_tokens=True).strip()
         print(f"BioGPT Summary: {bio_summary[:100]}")  # Log first 100 characters
     except Exception as e:
         print(f"BioGPT Error: {e}")
@@ -100,13 +95,12 @@ def summarize_data():
 
     # Simplify summary with ChatGPT
     try:
-        chat_response = openai.ChatCompletion.create(
+        chat_response = openai.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Explain the following medical summary to a 3rd-grade audience:\n{bio_summary}"}
-            ],
-            max_tokens=150
+                {"role": "user", "content": f"Explain the following medical summary as if you were a Doctor talking to a patient with a third grade reading level, structure as plain text and not markdown also without restating what youre doing and no medical jargon or acronyms:\n{bio_summary}"}
+            ]
         )
         simplified_summary = chat_response.choices[0].message.content.strip()
         print(f"Simplified Summary: {simplified_summary[:100]}")  # Log first 100 characters

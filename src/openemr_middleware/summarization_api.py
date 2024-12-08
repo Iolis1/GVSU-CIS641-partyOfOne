@@ -10,11 +10,11 @@ with open("config.json") as config_file:
 
 app = Flask(__name__)
 
-# BioGPT setup
+# BioGPT setup provided by https://huggingface.co/microsoft/biogpt
 bio_tokenizer = BioGptTokenizer.from_pretrained("microsoft/BioGPT")
 bio_model = BioGptForCausalLM.from_pretrained("microsoft/BioGPT")
 
-# Set OpenAI API key
+# Set OpenAI API key - code provided by https://platform.openai.com/docs/overview
 openai.api_key = config["openai_api_key"]
 
 # MySQL database connection

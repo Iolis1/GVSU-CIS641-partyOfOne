@@ -20,10 +20,104 @@
             </ul>
 
             <h2>Prerequisites</h2>
-            <p>Details on prerequisites will be added here.</p>
+            <ul>
+                <li>A system capable of running PHP 8.0 or higher.</li>
+                <li>Apache or Nginx web server configured to serve PHP applications.</li>
+                <li>MySQL 8.0 or higher for database storage.</li>
+                <li>Composer for dependency management (for OpenEMR).</li>
+                <li>Python 3.8 or higher with the following libraries:
+                    <ul>
+                        <li>Flask</li>
+                        <li>PyMySQL</li>
+                        <li>transformers</li>
+                        <li>openai</li>
+                        <li>zlib</li>
+                    </ul>
+                </li>
+                <li>Node.js and npm for frontend dependency management if UI customizations are needed.</li>
+                <li>SSL certificates to ensure HTTPS compliance for secure communications.</li>
+            </ul>
 
             <h2>Run Instructions</h2>
-            <p>Instructions for running the project will be added here.</p>
+            <ol>
+                <li>Install all prerequisites mentioned above.</li>
+                <li>Set up the MySQL database:
+                    <ul>
+                        <li>Create a database and run the provided `schema.sql` script to set up tables.</li>
+                        <li>Update the database credentials in the configuration file (`config.json` for middleware).</li>
+                    </ul>
+                </li>
+                <li>Set up the PHP server:
+                    <ul>
+                        <li>Place the project files in the Apache/Nginx web server's document root.</li>
+                        <li>Ensure the `globals.php` file points to the correct paths for OpenEMR dependencies.</li>
+                    </ul>
+                </li>
+                <li>Run the Python middleware:
+                    <ul>
+                        <li>Navigate to the middleware folder.</li>
+                        <li>Install the required Python libraries using `pip install -r requirements.txt`.</li>
+                        <li>Update the database credentials and api keys in the configuration file you create(`config.json`).</li>
+                        <li>Run the Flask application using `python summarization_api.py`.</li>
+                        <li>Ensure the middleware is accessible via `http://localhost:5000`.</li>
+                    </ul>
+                </li>
+                <li>Launch the application:
+                    <ul>
+                        <li>Open your browser and navigate to the OpenEMR dashboard.</li>
+                        <li>Click on "View All Lab Summaries" to generate and review summaries.</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h2>Training Information</h2>
+            <ul>
+                <li>**Training**:
+                    <ul>
+                        <li>To generate a summary follow a few easy steps</li>
+                        <ol>
+                            <li>Click on the "View All Lab Summaries" button</li>
+                            <li>Click on the "Generate Summary" button</li>
+                            <li>Wait for the summary to be generated</li>
+                            <li>Review the summary and make any necessary edits</li>
+                            <li>Click on the "Approve Summary" button</li>
+                        </ol>
+                    </ul>
+                </li>
+                <li>**FAQs**:
+                    <ul>
+                        <li>How do I generate a lab summary?</li>
+                        <li>How do I edit and approve a summary?</li>
+                        <li>What do I do if the summarization fails?</li>
+                    </ul>
+                </li>
+                <li>**Troubleshooting**:
+                    <ul>
+                        <li>Check error logs in `logs/errors.log` for middleware issues.</li>
+                        <li>Ensure database credentials are correctly configured in the `config.json` file.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h2>Features</h2>
+            <ul>
+                <li>Automatic summarization of lab results using BioGPT and OpenAI's GPT-4o-mini.</li>
+                <li>User-friendly interface for editing and approving summaries.</li>
+                <li>Secure data handling in compliance with HIPAA and GDPR.</li>
+                <li>Performance-optimized middleware to handle concurrent requests.</li>
+                <li>Backup and recovery support for database data.</li>
+            </ul>
+
+            <h2>Support</h2>
+            <p>For technical support, contact Hernalup@mail.gvsu.edu</p>
+
+            <h2>Backup and Recovery</h2>
+            <ul>
+                <li>Daily automated backups are performed for all summary data.</li>
+                <li>Manual backups can be initiated from the admin interface.</li>
+                <li>Backup integrity is tested quarterly as per compliance requirements.</li>
+                <li>In case of data loss, follow the recovery steps outlined in the user guide.</li>
+            </ul>
         </div>
     </div>
 </body>

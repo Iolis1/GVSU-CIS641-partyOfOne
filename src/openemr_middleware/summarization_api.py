@@ -84,7 +84,7 @@ def summarize_data():
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful medical professional."},
-                {"role": "user", "content": f"Explain the following medical summary as if you were a doctor talking to a patient with a third-grade reading level. Use simple, easy-to-understand language, avoiding medical jargon or acronyms, and condense the information into 1 paragraph or less:\n\n{bio_summary}"}
+                {"role": "user", "content": f"Explain the following medical summary as if you were a doctor talking to a patient with a third-grade reading level following the flesch kincaid method. Use simple, easy-to-understand language, avoiding medical jargon or acronyms, and condense the information into 1 paragraph or less, ensure not to use phrases like everything looks good and the like, instead simply present the information and for further questions contact your medical service provider:\n\n{bio_summary}"}
             ]
         )
         simplified_summary = chat_response.choices[0].message.content.strip()

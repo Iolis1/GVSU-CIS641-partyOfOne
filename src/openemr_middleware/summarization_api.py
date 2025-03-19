@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from transformers import BioGptTokenizer, BioGptForCausalLM
 import openai
 import pymysql
 import json
@@ -9,10 +8,6 @@ with open("config.json") as config_file:
     config = json.load(config_file)
 
 app = Flask(__name__)
-
-# BioGPT setup
-bio_tokenizer = BioGptTokenizer.from_pretrained("microsoft/BioGPT")
-bio_model = BioGptForCausalLM.from_pretrained("microsoft/BioGPT")
 
 # Set OpenAI API key
 openai.api_key = config["openai_api_key"]
@@ -36,12 +31,6 @@ def save_summaries_to_db(patient_id, data_type, data_id, bio_summary, simplified
                 INSERT INTO procedure_summaries (patient_id, data_type, data_id, bio_summary, simplified_summary)
                 VALUES (%s, %s, %s, %s, %s)
             """
-            # Debug: Log the query and values
-            print(f"Executing Query: {query}")
-            print(f"Values: Patient ID: {patient_id}, Data Type: {data_type}, Data ID: {data_id}")
-            print(f"Bio Summary (First 100 chars): {bio_summary[:100]}")
-            print(f"Simplified Summary (First 100 chars): {simplified_summary[:100]}")
-
             cursor.execute(query, (patient_id, data_type, data_id, bio_summary, simplified_summary))
             connection.commit()
     except pymysql.MySQLError as e:
@@ -53,7 +42,7 @@ def save_summaries_to_db(patient_id, data_type, data_id, bio_summary, simplified
 @app.route('/summarize', methods=['POST'])
 def summarize_data():
     """
-    Process and summarize data from OpenEMR.
+    Process and summarize data using ChatGPT.
     """
     try:
         data = request.get_json()
@@ -74,39 +63,35 @@ def summarize_data():
     if not patient_id or not data_type or not data_content or not data_id:
         return jsonify({"error": "Missing required fields: patient_id, data_type, data_content, or data_id"}), 400
 
-    # Generate BioGPT summary
-    try:
-        bio_prompt = (
-            "Summarize the following medical test results in one clear paragraph:\n\n"
-            f"{data_content}"
-        )
-        bio_inputs = bio_tokenizer(bio_prompt, return_tensors="pt")
-        bio_max_tokens = min(200, len(bio_prompt) // 4)  # Dynamic token adjustment
-        bio_outputs = bio_model.generate(**bio_inputs, 
-                                         max_new_tokens=bio_max_tokens,
-                                         no_repeat_ngram_size=3,
-                                         temperature=0.7,
-                                         top_k=50)
-        bio_summary = bio_tokenizer.decode(bio_outputs[0], skip_special_tokens=True).strip()
-        print(f"BioGPT Summary: {bio_summary[:100]}")  # Log first 100 characters
-    except Exception as e:
-        print(f"BioGPT Error: {e}")
-        return jsonify({"error": "BioGPT summarization failed"}), 500
-
-    # Simplify summary with ChatGPT
+    # Generate bio_summary using ChatGPT
     try:
         chat_response = openai.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Explain the following medical summary as if you were a Doctor talking to a patient with a third grade reading level, structure as plain text and not markdown also without restating what youre doing and no medical jargon or acronyms:\n{bio_summary}"}
+                {"role": "system", "content": "You are a highly knowledgeable medical professional."},
+                {"role": "user", "content": f"Provide a professional medical summary of the following test results using appropriate medical terminology and clinical language:\n\n{data_content}"}
+            ]
+        )
+        bio_summary = chat_response.choices[0].message.content.strip()
+        print(f"Bio Summary: {bio_summary[:100]}")  # Log first 100 characters
+    except Exception as e:
+        print(f"ChatGPT Error (bio_summary): {e}")
+        return jsonify({"error": "ChatGPT summarization for bio_summary failed"}), 500
+
+    # Generate simplified summary using ChatGPT
+    try:
+        chat_response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful medical professional."},
+                {"role": "user", "content": f"Explain the following medical summary as if you were a doctor talking to a patient with a third-grade reading level. Use simple, easy-to-understand language, avoiding medical jargon or acronyms, and condense the information into 1 paragraph or less:\n\n{bio_summary}"}
             ]
         )
         simplified_summary = chat_response.choices[0].message.content.strip()
         print(f"Simplified Summary: {simplified_summary[:100]}")  # Log first 100 characters
     except Exception as e:
-        print(f"ChatGPT Error: {e}")
-        return jsonify({"error": "ChatGPT summarization failed"}), 500
+        print(f"ChatGPT Error (simplified_summary): {e}")
+        return jsonify({"error": "ChatGPT summarization for simplified_summary failed"}), 500
 
     # Save to database
     try:
